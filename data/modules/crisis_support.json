@@ -1,0 +1,28 @@
+{
+  "id": "crisis_support",
+  "name": "Immediate Support",
+  "version": 1,
+  "entryQuestionId": "q1",
+  "questions": {
+    "q1": {
+      "id": "q1",
+      "text": "I'm here with you. Are you safe right now?",
+      "isCheckpoint": true,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Yes, I'm safe", "target": { "kind": "next", "nextQuestionId": "q2" } },
+        { "id": "o2", "label": "I'd like to talk to someone", "target": { "kind": "terminal" } }
+      ]
+    },
+    "q2": {
+      "id": "q2",
+      "text": "Let's slow down together. Would you like to try a breathing exercise?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Yes", "target": { "kind": "terminal" } },
+        { "id": "o2", "label": "Not right now", "target": { "kind": "terminal" } }
+      ]
+    }
+  }
+}

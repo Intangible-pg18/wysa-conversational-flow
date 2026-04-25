@@ -1,0 +1,74 @@
+{
+  "id": "managing_anxiety",
+  "name": "Managing Anxiety",
+  "version": 1,
+  "entryQuestionId": "q1",
+  "questions": {
+    "q1": {
+      "id": "q1",
+      "text": "How often have you felt anxious this week?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Rarely", "target": { "kind": "next", "nextQuestionId": "q2" } },
+        { "id": "o2", "label": "A few times", "target": { "kind": "next", "nextQuestionId": "q2" } },
+        { "id": "o3", "label": "Most days", "target": { "kind": "next", "nextQuestionId": "q3" } }
+      ]
+    },
+    "q2": {
+      "id": "q2",
+      "text": "When anxiety shows up, where do you feel it most?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "In my thoughts", "target": { "kind": "next", "nextQuestionId": "q4" } },
+        { "id": "o2", "label": "In my body", "target": { "kind": "next", "nextQuestionId": "q4" } },
+        { "id": "o3", "label": "Both", "target": { "kind": "next", "nextQuestionId": "q4" } }
+      ]
+    },
+    "q3": {
+      "id": "q3",
+      "text": "What tends to trigger it most often?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Work or studies", "target": { "kind": "next", "nextQuestionId": "q4" } },
+        { "id": "o2", "label": "Relationships", "target": { "kind": "next", "nextQuestionId": "q4" } },
+        { "id": "o3", "label": "Health worries", "target": { "kind": "next", "nextQuestionId": "q4" } },
+        { "id": "o4", "label": "Not sure", "target": { "kind": "next", "nextQuestionId": "q4" } }
+      ]
+    },
+    "q4": {
+      "id": "q4",
+      "text": "How are you feeling right now, in this moment?",
+      "isCheckpoint": true,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Calm enough", "target": { "kind": "next", "nextQuestionId": "q5" } },
+        { "id": "o2", "label": "A bit on edge", "target": { "kind": "next", "nextQuestionId": "q5" } },
+        { "id": "o3", "label": "Overwhelmed", "target": { "kind": "switch", "targetModuleId": "crisis_support" } }
+      ]
+    },
+    "q5": {
+      "id": "q5",
+      "text": "Would you like to try a short grounding exercise or learn about what's going on?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Grounding exercise", "target": { "kind": "next", "nextQuestionId": "q6" } },
+        { "id": "o2", "label": "Learn more", "target": { "kind": "next", "nextQuestionId": "q6" } },
+        { "id": "o3", "label": "Done for now", "target": { "kind": "terminal" } }
+      ]
+    },
+    "q6": {
+      "id": "q6",
+      "text": "Great. We'll set that up for you. How are you feeling about doing this?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Ready", "target": { "kind": "terminal" } },
+        { "id": "o2", "label": "A little reluctant", "target": { "kind": "terminal" } }
+      ]
+    }
+  }
+}
