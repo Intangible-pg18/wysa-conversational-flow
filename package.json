@@ -1,0 +1,30 @@
+{
+  "name": "wysa-conversation-flow",
+  "version": "0.1.0",
+  "description": "Backend service for modular question-based conversation flows for a mental health application.",
+  "main": "dist/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "conversation-flow",
+    "mental-health",
+    "express",
+    "typescript",
+    "mongodb"
+  ],
+  "author": "Prateek-Shukla",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  }
+}
