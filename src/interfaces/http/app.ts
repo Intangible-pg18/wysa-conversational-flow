@@ -5,6 +5,7 @@ import {randomUUID} from "node:crypto"
 import { env } from "../../config/env.js";
 import { logger } from "../../config/logger.js"
 import { getDb } from "../../infrastructure/db/mongo.js";
+import { errorMiddleware } from "./error-middleware.js";
 
 export function createApp():Express {
     const app = express();
@@ -41,11 +42,7 @@ export function createApp():Express {
         res.status(404).json({ error: "not_found", path: req.path });
     });
     
-    app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
-        const requestId = (req as Request & { id?: string }).id;
-        logger.error({ err, requestId }, "unhandled error in request");
-        res.status(500).json({ error: "internal_error", requestId });
-    });
+    app.use(errorMiddleware);
 
     return app;
 }

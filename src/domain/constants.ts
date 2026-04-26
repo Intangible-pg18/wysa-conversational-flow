@@ -17,3 +17,8 @@ export const OptionKind = {
 export const COMPLETED_RECENT_DAYS = 7;
 export const ABANDONED_EXPIRY_DAYS = 30;
 export const daysToMs = (days: number): number => days * 24 * 60 * 60 * 1000;
+
+export const daysSince = (date: Date, nowMs: number = Date.now()): number => {
+  const diffMs = nowMs - date.getTime();
+  return Math.floor(diffMs / daysToMs(1));
+};
