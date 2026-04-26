@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
-import { DomainError } from "../../domain/errors.js";
-import { logger } from "../../config/logger.js";
-import { env } from "../../config/env.js";
+import { DomainError } from "../domain/errors.js";
+import { logger } from "../config/logger.js";
+import { env } from "../config/env.js";
 
 export function errorMiddleware(err: Error, req: Request, res: Response, _next: NextFunction) {
     const requestId = (req as Request & {id?: string}).id;

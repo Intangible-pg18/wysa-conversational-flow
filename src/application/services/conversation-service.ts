@@ -20,7 +20,7 @@ export type ConversationOutcome =
         state: UserModuleState
     };
 
-export class ConversationalService {
+export class ConversationService {
     constructor(private readonly modules: ModuleRepository, private readonly userStates: UserStateRepository, private readonly history: HistoryRepository) {}
 
     async start(userId: UserId, moduleId: ModuleId): Promise<ConversationOutcome> {

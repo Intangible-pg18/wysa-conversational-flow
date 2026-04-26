@@ -2,12 +2,14 @@ import express, {type Express, type Request, type Response, type NextFunction} f
 import helmet from "helmet";
 import cors from "cors"
 import {randomUUID} from "node:crypto"
-import { env } from "../../config/env.js";
-import { logger } from "../../config/logger.js"
-import { getDb } from "../../infrastructure/db/mongo.js";
-import { errorMiddleware } from "./error-middleware.js";
+import { env } from "./config/env.js";
+import { logger } from "./config/logger.js"
+import { getDb } from "./infrastructure/db/mongo.js";
+import type { Repositories } from "./infrastructure/wiring.js";
+import { errorMiddleware } from "./middleware/error-middleware.js";
+import { v1Routes } from "./routes/v1/index.js";
 
-export function createApp():Express {
+export function createApp(repos: Repositories):Express {
     const app = express();
     app.use(helmet());
     app.use(cors({origin: env.CORS_ORIGIN}));
@@ -26,6 +28,8 @@ export function createApp():Express {
         });
         next();
     });
+
+    app.use("/v1", v1Routes(repos));
 
     app.get("/healthz", async (_req, res) => {
         try {
