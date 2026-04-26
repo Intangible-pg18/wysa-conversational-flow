@@ -6,6 +6,7 @@ import type { ModuleRepository } from "../repository-contracts/module-repository
 import type { UserStateRepository } from "../repository-contracts/user-state-repository.js";
 import type { HistoryRepository } from "../repository-contracts/history-repository.js";
 import { getResolver } from "../resolvers/registry.js";
+import { logger } from "../../config/logger.js";
 
 export type ConversationOutcome = 
     {
@@ -24,56 +25,28 @@ export class ConversationalService {
 
     async start(userId: UserId, moduleId: ModuleId): Promise<ConversationOutcome> {
         const module = await this.requireModule(moduleId);
-        const existing = await this.userStates.findByUserAndModule(userId, moduleId);
+        const state = await this.loadActiveOrExpire(userId, moduleId);
 
-        if(existing && this.isExpired(existing)) {
-            const expired: UserModuleState = {
-                ...existing,
-                status: "expired",
-                currentQuestionId: null,
-                lastActivityAt: new Date()
-            };
-            await this.userStates.save(expired);
-            return this.startFresh(userId, module);
-        }
-
-        if(!existing) 
+        if (!state || state.status === "expired")
             return this.startFresh(userId, module);
 
-        if(existing.status === "completed")
-            return {kind: "completed", state: existing};
+        if (state.status === "completed")
+            return { kind: "completed", state };
 
-        const question = this.requireQuestion(module, existing.currentQuestionId!);
-
-        return {
-            kind: "question",
-            moduleId: module.id,
-            question,
-            state: existing
-        };
+        const question = this.requireQuestion(module, state.currentQuestionId!);
+        return { kind: "question", moduleId: module.id, question, state };
     }
 
     async getCurrent(userId: UserId, moduleId: ModuleId): Promise<ConversationOutcome> {
         const module = await this.requireModule(moduleId);
-        const state = await this.userStates.findByUserAndModule(userId, moduleId);
+        const state = await this.loadActiveOrExpire(userId, moduleId);
         if (!state) throw new NotFoundError("State for user/module not found.");
 
-        if(this.isExpired(state)){
-            const expired: UserModuleState = {
-                ...state,
-                status: "expired",
-                currentQuestionId: null,
-                lastActivityAt: new Date()
-            };
-            await this.userStates.save(expired);
-            return {kind: "completed", state: expired};
-        }
-
-        if(state.status !== "active")
-            return {kind: "completed", state};
+        if (state.status !== "active")
+            return { kind: "completed", state };
 
         const question = this.requireQuestion(module, state.currentQuestionId!);
-        return {kind: "question", moduleId: module.id, question, state};
+        return { kind: "question", moduleId: module.id, question, state };
     }
 
     async answer(userId: UserId, moduleId: ModuleId, questionId: QuestionId, optionId: OptionId): Promise<ConversationOutcome> {
@@ -189,6 +162,37 @@ export class ConversationalService {
         };
     }
 
+    async resolveDeepLink(userId: UserId, moduleId: ModuleId, requestedQuestionId: QuestionId): Promise<ConversationOutcome> {
+        const module = await this.requireModule(moduleId);
+        const state = await this.loadActiveOrExpire(userId, moduleId);
+
+        const linkedQuestionExists = !!module.questions[requestedQuestionId];
+        if(!linkedQuestionExists)
+            logger.debug({userId, moduleId, requestedQuestionId}, "Deep link points to non-existent question");
+        
+        if (!state || state.status === "expired")
+            return this.startFresh(userId, module);
+
+        if (state.status === "completed")
+            return { kind: "completed", state };
+
+        const linkAlignsWithCurrent = linkedQuestionExists && state.currentQuestionId === requestedQuestionId;
+        if (!linkAlignsWithCurrent) {
+            logger.debug(
+                {
+                    userId,
+                    moduleId,
+                    requestedQuestionId,
+                    actualCurrentQuestionId: state.currentQuestionId,
+                },
+                "Deep link overridden by current state"
+            );
+        }
+
+        const question = this.requireQuestion(module, state.currentQuestionId!);
+        return { kind: "question", moduleId: module.id, question, state };
+    }
+
     private async startFresh(userId: UserId, module: Module): Promise<ConversationOutcome> {
         const now = new Date();
         const state: UserModuleState = {
@@ -218,6 +222,23 @@ export class ConversationalService {
         if (!question)
             throw new Error(`Module '${module.id}' has no question '${questionId}'.`);
         return question;
+    }
+
+    private async loadActiveOrExpire(userId: UserId, moduleId: ModuleId): Promise<UserModuleState | null> {
+        const state = await this.userStates.findByUserAndModule(userId, moduleId);
+        if(!state) return null;
+
+        if(state.status === "active" && this.isExpired(state)) {
+            const expired: UserModuleState = {
+                ...state,
+                status: "expired",
+                currentQuestionId: null,
+                lastActivityAt: new Date(),
+            };
+            await this.userStates.save(expired);
+            return expired;
+        }
+        return state;
     }
 
     private isExpired(state: UserModuleState): boolean {
