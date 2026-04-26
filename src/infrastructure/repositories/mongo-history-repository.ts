@@ -82,4 +82,28 @@ export class MongoHistoryRepository implements HistoryRepository {
       { $set: { supersededBy: supersededByEntryId } }
     );
   }
+
+  async findActiveByQuestion(userId: UserId, moduleId: ModuleId, questionId: QuestionId): Promise<HistoryEntry | null> {
+    const doc = await this.collection.findOne({
+      userId,
+      moduleId,
+      questionId,
+      supersededBy: null,
+    });
+    return doc ? fromDoc(doc) : null;
+  }
+
+  async findActiveIdsSince(userId: UserId, moduleId: ModuleId, sinceInclusive: Date): Promise<string[]> {
+    const docs = await this.collection.find(
+        {
+          userId,
+          moduleId,
+          supersededBy: null,
+          timestamp: { $gte: sinceInclusive },
+        },
+        { projection: { _id: 1 } }
+      )
+      .toArray();
+    return docs.map((d) => d._id);
+  }
 }

@@ -1,4 +1,4 @@
-import type {HistoryEntry, ModuleId, UserId} from "../../domain/entities.js";
+import type {HistoryEntry, ModuleId, UserId, QuestionId} from "../../domain/entities.js";
 
 export interface HistoryListOptions {
   before?: Date;
@@ -13,4 +13,8 @@ export interface HistoryRepository {
   findByUser(userId: UserId, options?: HistoryListOptions): Promise<HistoryEntry[]>;
 
   markSuperseded(entryIds: string[], supersededByEntryId: string): Promise<void>;
+
+  findActiveByQuestion(userId: UserId, moduleId: ModuleId, questionId: QuestionId): Promise<HistoryEntry | null>;
+
+  findActiveIdsSince(userId: UserId, moduleId: ModuleId, sinceInclusive: Date): Promise<string[]>;
 }

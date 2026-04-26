@@ -72,8 +72,15 @@ export class ConversationService {
                 throw new NotFoundError(`Switch target module '${next.moduleId}' does not exist.`);
         }
 
+        const newEntryId = randomUUID();
+        const existingActive = await this.history.findActiveByQuestion(userId, moduleId, questionId);
+        if (existingActive) {
+            const idsToSupersede = await this.history.findActiveIdsSince(userId, moduleId, existingActive.timestamp);
+            await this.history.markSuperseded(idsToSupersede, newEntryId);
+        }
+
         const historyEntry: HistoryEntry = {
-            id: randomUUID(),
+            id: newEntryId,
             userId,
             moduleId,
             questionId,
