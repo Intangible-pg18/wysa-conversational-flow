@@ -65,6 +65,13 @@ export class ConversationService {
         if(!option) 
             throw new InvalidOptionError(`Option '${optionId}' is not valid for question '${questionId}'.`);
         
+        const next = getResolver(question.resolverType).resolve({question, selectedOption: option, path: state.path});
+        if (next.kind === "switchModule") {
+            const targetExists = await this.modules.findById(next.moduleId);
+            if (!targetExists)
+                throw new NotFoundError(`Switch target module '${next.moduleId}' does not exist.`);
+        }
+
         const historyEntry: HistoryEntry = {
             id: randomUUID(),
             userId,
@@ -77,12 +84,6 @@ export class ConversationService {
             supersededBy: null,
         };
         await this.history.append(historyEntry);
-
-        const next = getResolver(question.resolverType).resolve({
-            question,
-            selectedOption: option,
-            path: state.path
-        });
 
         const now = new Date();
         const isCheckpoint = question.isCheckpoint;
@@ -102,8 +103,7 @@ export class ConversationService {
                 lastActivityAt: now,
                 completedAt: now,
             };
-        } 
-        else {
+        } else {
             updatedState = {
                 ...state,
                 currentQuestionId: next.questionId,
@@ -118,7 +118,7 @@ export class ConversationService {
         if (next.kind === "end")
             return { kind: "completed", state: updatedState };
 
-        if (next.kind === "switchModule") 
+        if (next.kind === "switchModule")
             return this.start(userId, next.moduleId);
 
         const nextQuestion = this.requireQuestion(module, next.questionId);
