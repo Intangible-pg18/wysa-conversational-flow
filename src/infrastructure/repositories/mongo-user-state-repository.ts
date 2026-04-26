@@ -1,6 +1,6 @@
 import type { Collection, Db } from "mongodb";
 import type {ModuleId, PathEntry, QuestionId, SessionStatus, UserId, UserModuleState,} from "../../domain/entities.js";
-import type { UserStateRepository } from "../../application/contracts/user-state-repository.js";
+import type { UserStateRepository } from "../../application/repository-contracts/user-state-repository.js";
 
 type StateDoc = {
   _id: { userId: UserId; moduleId: ModuleId };

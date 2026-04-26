@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type {Module, ModuleId, QuestionId} from "../../domain/entities.js";
-import type { ModuleRepository } from "../../application/contracts/module-repository.js";
+import type { ModuleRepository } from "../../application/repository-contracts/module-repository.js";
 import { logger } from "../../config/logger.js";
 import { moduleSchema, type ModuleJson } from "./module-schema.js";
 

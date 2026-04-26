@@ -1,6 +1,6 @@
 import type {Collection, Db} from "mongodb";
 import type {Module, ModuleId, Question, QuestionId} from "../../domain/entities.js";
-import type {ModuleRepository} from "../../application/contracts/module-repository.js"
+import type {ModuleRepository} from "../../application/repository-contracts/module-repository.js"
 
 type ModuleDoc = {
     _id: string,

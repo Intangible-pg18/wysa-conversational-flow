@@ -2,9 +2,9 @@ import type { Db } from "mongodb";
 import { MongoModuleRepository } from "./repositories/mongo-module-repository.js";
 import { MongoUserStateRepository } from "./repositories/mongo-user-state-repository.js";
 import { MongoHistoryRepository } from "./repositories/mongo-history-repository.js";
-import type { ModuleRepository } from "../application/contracts/module-repository.js";
-import type { UserStateRepository } from "../application/contracts/user-state-repository.js";
-import type { HistoryRepository } from "../application/contracts/history-repository.js";
+import type { ModuleRepository } from "../application/repository-contracts/module-repository.js";
+import type { UserStateRepository } from "../application/repository-contracts/user-state-repository.js";
+import type { HistoryRepository } from "../application/repository-contracts/history-repository.js";
 
 export interface Repositories {
   modules: ModuleRepository;

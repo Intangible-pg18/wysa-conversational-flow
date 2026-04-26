@@ -65,4 +65,4 @@ export interface HistoryEntry {
     supersededBy: string | null
 }
 
-export type NextStep = {kind: "question", question: Question} | {kind: "switchModule", moduleId: ModuleId, questionId?: QuestionId} | {kind: "end"}
+export type NextStep = {kind: "question", questionId: QuestionId} | {kind: "switchModule", moduleId: ModuleId, questionId?: QuestionId} | {kind: "end"}

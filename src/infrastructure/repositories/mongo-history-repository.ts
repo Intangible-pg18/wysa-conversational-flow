@@ -1,6 +1,6 @@
 import type {Collection, Db} from "mongodb";
 import type {HistoryEntry, ModuleId, OptionId, QuestionId, UserId} from "../../domain/entities.js";
-import type {HistoryListOptions, HistoryRepository} from "../../application/contracts/history-repository.js";
+import type {HistoryListOptions, HistoryRepository} from "../../application/repository-contracts/history-repository.js";
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
