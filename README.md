@@ -78,6 +78,26 @@ curl -X POST http://localhost:3000/v1/modules/managing_anxiety/answer \
   -d '{"questionId":"q1","optionId":"o1"}'
 ```
 
+## Folder layout
+
+| File/folder | Relevance |
+|---|---|
+| src/ | |
+| app.ts | Express app setup |
+| index.ts | Boot: connect, seed, start server |
+| config/ | env and logger |
+| domain/ | entity types, errors, constants |
+| application/ | services, resolver strategy, repository interfaces |
+| infrastructure/ | MongoDB repositories, seeder, DB connection |
+| controllers/ | HTTP request handlers |
+| routes/v1/ | versioned route definitions |
+| middleware/ | error handling, async wrapper, user-context |
+| validators/ | Zod schemas for request validation |
+| data/ | |
+| modules/ | JSON files seeded into Mongo at boot |
+| WALKTHROUGH.md | How the code actually works |
+| AI_USAGE.md | How AI was used while building this |
+
 ## API summary
 
 All routes below are under `/v1` and require the `X-User-Id` header.
@@ -95,36 +115,95 @@ All routes below are under `/v1` and require the `X-User-Id` header.
 
 For more detail on what the system does on each call and why it's designed this way, see [`WALKTHROUGH.md`](./WALKTHROUGH.md). For how I used AI tools while building this, see [`AI_USAGE.md`](./AI_USAGE.md).
 
-## Folder layout
-src/
+## Data model
 
-app.ts                    # Express app setup
+### `modules` collection
 
-index.ts                  # Boot: connect, seed, start server
+One document per module. Questions are embedded (they're never queried independently of their module).
 
-config/                   # env and logger
+```json
+{
+  "_id": "managing_anxiety",
+  "name": "Managing Anxiety",
+  "entryQuestionId": "q1",
+  "version": 1,
+  "questions": {
+    "q1": {
+      "id": "q1",
+      "text": "How often have you felt anxious this week?",
+      "isCheckpoint": false,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Rarely", "target": { "kind": "next", "nextQuestionId": "q2" } },
+        { "id": "o2", "label": "Most days", "target": { "kind": "next", "nextQuestionId": "q3" } }
+      ]
+    },
+    "q4": {
+      "id": "q4",
+      "text": "How are you feeling right now, in this moment?",
+      "isCheckpoint": true,
+      "resolverType": "simple",
+      "options": [
+        { "id": "o1", "label": "Calm enough", "target": { "kind": "next", "nextQuestionId": "q5" } },
+        { "id": "o2", "label": "Overwhelmed", "target": { "kind": "switch", "targetModuleId": "crisis_support" } },
+        { "id": "o3", "label": "Done for now", "target": { "kind": "terminal" } }
+      ]
+    }
+  }
+}
+```
+An option's target is one of three things, modeled as a discriminated union: `next`, `switch`, or `terminal`.
 
-domain/                   # entity types, errors, constants
+### `user_module_states` collection
 
-application/              # services, resolver strategy, repository interfaces
+One document per (userId, moduleId).
 
-infrastructure/           # MongoDB repositories, seeder, DB connection
+```json
+{
+  "_id": { "userId": "user_123", "moduleId": "managing_anxiety" },
+  "currentQuestionId": "q5",
+  "path": [
+    { "questionId": "q4", "optionId": "o1" }
+  ],
+  "lastCheckpointId": "q4",
+  "status": "active",
+  "startedAt": "...",
+  "lastActivityAt": "...",
+  "completedAt": null
+}
+```
 
-controllers/              # HTTP request handlers
+The composite `_id` makes the (userId, moduleId) uniqueness structural (no separate unique index needed).
 
-routes/v1/                # versioned route definitions
+`path` is the list of answers that count *for routing* right now. After a checkpoint, `path` is reset to start at the checkpoint. Earlier answers are gone from `path` but never gone from history.
 
-middleware/               # error handling, async wrapper, user-context
+`status` is `active`, `completed`, or `expired`. `currentQuestionId` is `null` when status is anything other than `active`.
 
-validators/               # Zod schemas for request validation
+Index: `(_id.userId, status)` for the "all active states for this user" listing.
 
-data/
+### `conversation_history` collection
 
-modules/                  # JSON files seeded into Mongo at boot
+Append-only (with one well-defined exception: the `supersededBy` field).
 
-WALKTHROUGH.md                    # How the code actually works
+```json
+{
+  "_id": "",
+  "userId": "user_123",
+  "moduleId": "managing_anxiety",
+  "questionId": "q3",
+  "optionId": "o2",
+  "questionText": "What triggers it usually?",
+  "optionLabel": "Work stress",
+  "timestamp": "...",
+  "supersededBy": null
+}
+```
 
-AI_USAGE.md                 # How AI was used while building this
+We denormalize `questionText` and `optionLabel` into the history entry. If a content author edits the module later, old history still reflects what the user actually saw and chose. History should be a frozen snapshot.
+
+`supersededBy` is null by default. When a user re-answers (after a `back()`), the old entry's `supersededBy` is set to the new entry's ID. Nothing is ever deleted.
+
+Indexes: `(userId, moduleId, timestamp desc)` and `(userId, timestamp desc)`.
 
 ## Scripts
 
